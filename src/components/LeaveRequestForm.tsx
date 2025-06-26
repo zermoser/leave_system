@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, FileText, User, CheckCircle, X, BarChart3, TrendingUp, Users } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, FileText, User, CheckCircle, X, BarChart3, TrendingUp } from 'lucide-react';
 
 interface FormData {
   leaveType: string;
@@ -197,10 +197,10 @@ const CustomCalendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect, o
         onClick={() => handleDateClick(day)}
         disabled={disabled}
         className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors ${disabled
-            ? 'text-gray-300 cursor-not-allowed'
-            : selected
-              ? 'bg-blue-600 text-white'
-              : 'hover:bg-blue-50 text-gray-700'
+          ? 'text-gray-300 cursor-not-allowed'
+          : selected
+            ? 'bg-blue-600 text-white'
+            : 'hover:bg-blue-50 text-gray-700'
           }`}
       >
         {day}
@@ -243,60 +243,12 @@ const CustomCalendar: React.FC<CalendarProps> = ({ selectedDate, onDateSelect, o
   );
 };
 
-const LeaveDashboard: React.FC = () => {
-  // Mock data for demonstration
-  const [leaveRecords] = useState<LeaveRecord[]>([
-    {
-      id: '1',
-      leaveType: 'annual',
-      startDate: '2024-12-25',
-      endDate: '2024-12-27',
-      reason: 'Christmas holiday with family',
-      status: 'approved',
-      submittedDate: '2024-12-01',
-      days: 3
-    },
-    {
-      id: '2',
-      leaveType: 'sick',
-      startDate: '2024-11-15',
-      endDate: '2024-11-15',
-      reason: 'Flu symptoms and fever',
-      status: 'approved',
-      submittedDate: '2024-11-15',
-      days: 1
-    },
-    {
-      id: '3',
-      leaveType: 'personal',
-      startDate: '2025-01-15',
-      endDate: '2025-01-17',
-      reason: 'Personal matters to attend',
-      status: 'pending',
-      submittedDate: '2024-12-20',
-      days: 3
-    },
-    {
-      id: '4',
-      leaveType: 'annual',
-      startDate: '2024-10-10',
-      endDate: '2024-10-12',
-      reason: 'Long weekend vacation',
-      status: 'rejected',
-      submittedDate: '2024-10-01',
-      days: 3
-    }
-  ]);
+interface LeaveDashboardProps {
+  leaveRecords: LeaveRecord[];
+  leaveTypes: Array<{ value: string; label: string }>;
+}
 
-  const leaveTypes = [
-    { value: 'annual', label: 'Annual Leave' },
-    { value: 'sick', label: 'Sick Leave' },
-    { value: 'personal', label: 'Personal Leave' },
-    { value: 'maternity', label: 'Maternity Leave' },
-    { value: 'paternity', label: 'Paternity Leave' },
-    { value: 'emergency', label: 'Emergency Leave' }
-  ];
-
+const LeaveDashboard: React.FC<LeaveDashboardProps> = ({ leaveRecords, leaveTypes }) => {
   const getLeaveTypeLabel = (value: string) => {
     return leaveTypes.find(type => type.value === value)?.label || value;
   };
@@ -353,6 +305,17 @@ const LeaveDashboard: React.FC = () => {
       requests: typeRecords.length
     };
   }).filter(stat => stat.days > 0);
+
+  const getLeaveTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      annual: 'bg-blue-50 text-blue-700 border-blue-200',
+      sick: 'bg-red-50 text-red-700 border-red-200',
+      personal: 'bg-purple-50 text-purple-700 border-purple-200',
+      maternity: 'bg-pink-50 text-pink-700 border-pink-200',
+      paternity: 'bg-green-50 text-green-700 border-green-200'
+    };
+    return colors[type] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -434,47 +397,118 @@ const LeaveDashboard: React.FC = () => {
       </div>
 
       {/* Leave Records */}
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
-            <Users className="w-5 h-5" />
-            <span>Recent Leave Requests</span>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <FileText className="w-5 h-5 mr-2 text-blue-600" />
+            Leave Records
           </h2>
+          <p className="text-sm text-gray-600 mt-1">View and manage your leave applications</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="divide-y divide-gray-200">
-            {leaveRecords.map((record) => (
-              <div key={record.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-semibold text-gray-900">{getLeaveTypeLabel(record.leaveType)}</h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(record.status)}`}>
-                        {getStatusIcon(record.status)} {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                      </span>
+        {/* Records List */}
+        <div className="divide-y divide-gray-100">
+          {leaveRecords.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No leave records found</p>
+            </div>
+          ) : (
+            leaveRecords.map((record) => (
+              <div
+                key={record.id}
+                className="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50/30 transition-all duration-200 ease-in-out"
+              >
+                <div className="p-6">
+                  {/* Mobile-first layout */}
+                  <div className="space-y-4">
+                    {/* Header section with leave type and status */}
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <div className={`px-3 py-1 text-sm font-medium rounded-lg border ${getLeaveTypeColor(record.leaveType)}`}>
+                          {getLeaveTypeLabel(record.leaveType)}
+                        </div>
+                        <div className={`flex items-center space-x-1 px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(record.status)}`}>
+                          {getStatusIcon(record.status)}
+                          <span>{record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>{formatDisplayDate(record.startDate)} - {formatDisplayDate(record.endDate)}</span>
-                      <span>•</span>
-                      <span>{record.days} day{record.days !== 1 ? 's' : ''}</span>
+
+                    {/* Date and duration info */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="font-medium">Duration:</span>
+                        <span>{formatDisplayDate(record.startDate)} - {formatDisplayDate(record.endDate)}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="font-medium">Days:</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded-md text-xs font-semibold">
+                          {record.days} day{record.days !== 1 ? 's' : ''}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-700">{record.reason}</p>
-                  </div>
-                  <div className="text-right text-sm text-gray-500">
-                    <p>Submitted: {formatDisplayDate(record.submittedDate)}</p>
+
+                    {/* Reason */}
+                    <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-blue-200">
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        <span className="font-medium text-gray-900">Reason: </span>
+                        {record.reason}
+                      </p>
+                    </div>
+
+                    {/* Submitted date - positioned at bottom right on larger screens */}
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                      <div className="text-xs text-gray-400">
+                        Leave ID : {record.id.toString().padStart(3, '0')}
+                      </div>
+                      <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                        Submitted: {formatDisplayDate(record.submittedDate)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
+
+        {/* Footer with summary */}
+        {leaveRecords.length > 0 && (
+          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
+            <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-gray-600">
+              <span>Total records: {leaveRecords.length}</span>
+              <div className="flex space-x-4">
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                  Approved: {leaveRecords.filter(r => r.status === 'approved').length}
+                </span>
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full mr-1"></div>
+                  Pending: {leaveRecords.filter(r => r.status === 'pending').length}
+                </span>
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-red-400 rounded-full mr-1"></div>
+                  Rejected: {leaveRecords.filter(r => r.status === 'rejected').length}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const LeaveRequestForm: React.FC = () => {
+interface LeaveRequestFormProps {
+  onNewLeaveRequest: (newRequest: LeaveRecord) => void;
+  leaveTypes: Array<{ value: string; label: string }>;
+}
+
+const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ onNewLeaveRequest, leaveTypes }) => {
   const [formData, setFormData] = useState<FormData>({
     leaveType: '',
     startDate: '',
@@ -487,15 +521,6 @@ const LeaveRequestForm: React.FC = () => {
   const [showEndCalendar, setShowEndCalendar] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const leaveTypes = [
-    { value: 'annual', label: 'Annual Leave' },
-    { value: 'sick', label: 'Sick Leave' },
-    { value: 'personal', label: 'Personal Leave' },
-    { value: 'maternity', label: 'Maternity Leave' },
-    { value: 'paternity', label: 'Paternity Leave' },
-    { value: 'emergency', label: 'Emergency Leave' }
-  ];
 
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -544,6 +569,15 @@ const LeaveRequestForm: React.FC = () => {
 
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const newLeave: LeaveRecord = {
+      id: Date.now().toString(), // Simple unique ID
+      ...formData,
+      status: 'pending', // New requests are pending
+      submittedDate: new Date().toISOString().split('T')[0], // Current date
+      days: calculateLeaveDays(),
+    };
+    onNewLeaveRequest(newLeave);
 
     setIsSubmitting(false);
     setShowSuccessModal(true);
@@ -613,8 +647,8 @@ const LeaveRequestForm: React.FC = () => {
                 value={formData.leaveType}
                 onChange={(e) => handleInputChange('leaveType', e.target.value)}
                 className={`w-full px-4 py-3 rounded-lg border-2 transition-colors focus:outline-none ${errors.leaveType
-                    ? 'border-red-300 focus:border-red-500'
-                    : 'border-gray-200 focus:border-blue-500'
+                  ? 'border-red-300 focus:border-red-500'
+                  : 'border-gray-200 focus:border-blue-500'
                   }`}
               >
                 <option value="">Select leave type</option>
@@ -644,8 +678,8 @@ const LeaveRequestForm: React.FC = () => {
                     setShowEndCalendar(false);
                   }}
                   className={`w-full px-4 py-3 rounded-lg border-2 text-left transition-colors focus:outline-none ${errors.startDate
-                      ? 'border-red-300 focus:border-red-500'
-                      : 'border-gray-200 focus:border-blue-500'
+                    ? 'border-red-300 focus:border-red-500'
+                    : 'border-gray-200 focus:border-blue-500'
                     }`}
                 >
                   {formData.startDate ? formatDisplayDate(formData.startDate) : 'Select start date'}
@@ -675,8 +709,8 @@ const LeaveRequestForm: React.FC = () => {
                     setShowStartCalendar(false);
                   }}
                   className={`w-full px-4 py-3 rounded-lg border-2 text-left transition-colors focus:outline-none ${errors.endDate
-                      ? 'border-red-300 focus:border-red-500'
-                      : 'border-gray-200 focus:border-blue-500'
+                    ? 'border-red-300 focus:border-red-500'
+                    : 'border-gray-200 focus:border-blue-500'
                     }`}
                 >
                   {formData.endDate ? formatDisplayDate(formData.endDate) : 'Select end date'}
@@ -717,8 +751,8 @@ const LeaveRequestForm: React.FC = () => {
                 placeholder="Please provide a reason for your leave request..."
                 rows={4}
                 className={`w-full px-4 py-3 rounded-lg border-2 resize-none transition-colors focus:outline-none ${errors.reason
-                    ? 'border-red-300 focus:border-red-500'
-                    : 'border-gray-200 focus:border-blue-500'
+                  ? 'border-red-300 focus:border-red-500'
+                  : 'border-gray-200 focus:border-blue-500'
                   }`}
               />
               {errors.reason && (
@@ -755,6 +789,61 @@ const LeaveRequestForm: React.FC = () => {
 
 export default function LeaveManagementApp() {
   const [currentView, setCurrentView] = useState<'form' | 'dashboard'>('form');
+  const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([
+    {
+      id: '1',
+      leaveType: 'annual',
+      startDate: '2024-12-25',
+      endDate: '2024-12-27',
+      reason: 'Christmas holiday with family',
+      status: 'approved',
+      submittedDate: '2024-12-01',
+      days: 3
+    },
+    {
+      id: '2',
+      leaveType: 'sick',
+      startDate: '2024-11-15',
+      endDate: '2024-11-15',
+      reason: 'Flu symptoms and fever',
+      status: 'approved',
+      submittedDate: '2024-11-15',
+      days: 1
+    },
+    {
+      id: '3',
+      leaveType: 'personal',
+      startDate: '2025-01-15',
+      endDate: '2025-01-17',
+      reason: 'Personal matters to attend',
+      status: 'pending',
+      submittedDate: '2024-12-20',
+      days: 3
+    },
+    {
+      id: '4',
+      leaveType: 'annual',
+      startDate: '2024-10-10',
+      endDate: '2024-10-12',
+      reason: 'Long weekend vacation',
+      status: 'rejected',
+      submittedDate: '2024-10-01',
+      days: 3
+    }
+  ]);
+
+  const leaveTypes = [
+    { value: 'annual', label: 'Annual Leave' },
+    { value: 'sick', label: 'Sick Leave' },
+    { value: 'personal', label: 'Personal Leave' },
+    { value: 'maternity', label: 'Maternity Leave' },
+    { value: 'paternity', label: 'Paternity Leave' },
+    { value: 'emergency', label: 'Emergency Leave' }
+  ];
+
+  const handleNewLeaveRequest = (newRequest: LeaveRecord) => {
+    setLeaveRecords(prevRecords => [newRequest, ...prevRecords]);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
@@ -766,8 +855,8 @@ export default function LeaveManagementApp() {
               <button
                 onClick={() => setCurrentView('form')}
                 className={`px-6 py-2 rounded-full font-medium transition-all ${currentView === 'form'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-blue-600'
                   }`}
               >
                 Request Leave
@@ -775,8 +864,8 @@ export default function LeaveManagementApp() {
               <button
                 onClick={() => setCurrentView('dashboard')}
                 className={`px-6 py-2 rounded-full font-medium transition-all ${currentView === 'dashboard'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-blue-600'
                   }`}
               >
                 Dashboard
@@ -786,7 +875,11 @@ export default function LeaveManagementApp() {
         </div>
 
         {/* Content */}
-        {currentView === 'form' ? <LeaveRequestForm /> : <LeaveDashboard />}
+        {currentView === 'form' ? (
+          <LeaveRequestForm onNewLeaveRequest={handleNewLeaveRequest} leaveTypes={leaveTypes} />
+        ) : (
+          <LeaveDashboard leaveRecords={leaveRecords} leaveTypes={leaveTypes} />
+        )}
       </div>
     </div>
   );
